@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Digital Twin - Data Center Room</title>
+    <style>
+        body { margin: 0; overflow: hidden; background: #050505; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        #ui-overlay {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            color: #00ff88;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid #00ff88;
+            pointer-events: none;
+            box-shadow: 0 0 15px rgba(0, 255, 136, 0.3);
+        }
+        .stat-line { margin-bottom: 5px; font-size: 14px; text-transform: uppercase; letter-spacing: 1px; }
+        .value { font-weight: bold; color: #ffffff; }
+    </style>
+</head>
+<body>
+
+    <div id="ui-overlay">
+        <div class="stat-line">Система: <span id="status" class="value">Подключение...</span></div>
+        <div class="stat-line">Обороты кулеров: <span id="speed" class="value">0</span>%</div>
+        <div class="stat-line">Объектов в сети: <span id="fan-count" class="value">0</span></div>
+    </div>
+
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+                "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+            }
+        }
+    </script>
+
+    <script type="module">
+        import * as THREE from 'three';
+        import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+        import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+        // ✅ Автоматически берём хост текущей страницы
+        // ✅ Автоматически берём хост текущей страницы
+        let HOST;
+        try {
+            HOST = window.location.hostname || window.parent.location.hostname || 'localhost';
+        } catch (e) {
+            HOST = 'localhost';
+        }
+        // --- 1. ПАРАМЕТРЫ СЦЕНЫ ---
+        const scene = new THREE.Scene();
+        scene.background = new THREE.Color(0x0a0a0a);
+
+        const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
+        camera.position.set(12, 8, 12);
+
+        const renderer = new THREE.WebGLRenderer({ antialias: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(window.devicePixelRatio);
+        document.body.appendChild(renderer.domElement);
+
+        const controls = new OrbitControls(camera, renderer.domElement);
+        controls.enableDamping = true;
+
+        // --- 2. ОСВЕЩЕНИЕ ---
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+        scene.add(ambientLight);
+
+        const directionalLight = new THREE.DirectionalLight(0xffffff, 1.2);
+        directionalLight.position.set(10, 20, 10);
+        scene.add(directionalLight);
+
+        const pointLight = new THREE.PointLight(0x0088ff, 2, 50);
+        pointLight.position.set(0, 5, 0);
+        scene.add(pointLight);
+
+        // --- 3. ЗАГРУЗКА МОДЕЛИ ---
+        let allBlades = [];
+        const loader = new GLTFLoader();
+
+        // ✅ ИСПРАВЛЕНО: обратные кавычки вместо одинарных
+        loader.load(`http://${HOST}:8501/app/static/room.glb`, (gltf) => {
+            const model = gltf.scene;
+            scene.add(model);
+            model.position.set(0, 0, 0);
+
+            model.traverse((child) => {
+                if (child.isMesh && child.name.startsWith('Blades')) {
+                    allBlades.push(child);
+                    console.log("Найден компонент:", child.name);
+                }
+            });
+
+            document.getElementById('fan-count').innerText = allBlades.length;
+            console.log("Загрузка завершена. Найдено вентиляторов:", allBlades.length);
+        }, undefined, (error) => {
+            console.error("Ошибка при загрузке модели:", error);
+        });
+
+        // --- 4. WEBSOCKET ---
+        const statusEl = document.getElementById('status');
+        const speedEl  = document.getElementById('speed');
+
+        let targetRotationSpeed  = 0;
+        let currentRotationSpeed = 0;
+
+        // ✅ ИСПРАВЛЕНО: обратные кавычки вместо одинарных
+        const socket = new WebSocket(`ws://${HOST}:8765`);
+
+        socket.onopen = () => {
+            statusEl.innerText = "ONLINE";
+            statusEl.style.color = "#00ff88";
+        };
+
+        socket.onmessage = (event) => {
+            try {
+                const data = JSON.parse(event.data);
+                targetRotationSpeed = data.fan_speed * 0.003;
+                speedEl.innerText   = Math.round(data.fan_speed);
+            } catch (e) {
+                console.error("Ошибка парсинга данных:", e);
+            }
+        };
+
+        socket.onclose = () => {
+            statusEl.innerText = "OFFLINE";
+            statusEl.style.color = "#ff4444";
+            targetRotationSpeed = 0;
+        };
+
+        // --- 5. АНИМАЦИЯ ---
+        function animate() {
+            requestAnimationFrame(animate);
+            currentRotationSpeed += (targetRotationSpeed - currentRotationSpeed) * 0.05;
+            allBlades.forEach((blade) => { blade.rotation.y += currentRotationSpeed; });
+            controls.update();
+            renderer.render(scene, camera);
+        }
+
+        animate();
+
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+
+    </script>
+</body>
+</html>

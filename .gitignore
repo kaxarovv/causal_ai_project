@@ -1,0 +1,16 @@
+# Временные файлы симуляции
+state.json
+*.blend
+*.blend1
+
+# Python
+__pycache__/
+*.py[cod]
+myenv/
+.env
+
+# Данные (если не хочешь, чтобы история перезаписывалась другими)
+data/history.csv
+
+# Системные файлы
+.DS_Store

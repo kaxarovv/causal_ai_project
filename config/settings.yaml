@@ -1,0 +1,8 @@
+infrastructure:
+  max_power_kw: 120.0
+  target_temp_c: 22.0
+causal_weights:
+  ate_temp: -0.03540
+  ate_power: 0.20071
+  ate_load: 0.06565
+  ate_weather: 0.14649
