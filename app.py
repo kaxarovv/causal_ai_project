@@ -157,15 +157,6 @@ with open("state.json", "w") as f:
 # ─────────────────────────────────────────────
 # ОБНОВЛЕНИЕ UI
 # ─────────────────────────────────────────────
-# with metrics_area.container():
-#     m1, m2 = st.columns(2)
-#     m1.metric("Температура", f"{new_temp:.1f} °C",
-#               delta=f"{new_temp - TARGET_TEMP:.1f}",
-#               delta_color="inverse")
-#     m2.metric("PUE", f"{pue:.2f}")
-#     m3, m4 = st.columns(2)
-#     m3.metric("Обдув", f"{st.session_state.sim_data['fan']:.1f}%")
-#     m4.metric("Мощность", f"{load + power_cool + 20:.0f} кВт")
 with metrics_area.container():
     m1, m2, m3, m4 = st.columns(4)
     m1.metric("Температура", f"{new_temp:.1f} °C",
@@ -174,33 +165,6 @@ with metrics_area.container():
     m2.metric("PUE", f"{pue:.2f}")
     m3.metric("Обдув", f"{st.session_state.sim_data['fan']:.1f}%")
     m4.metric("Мощность", f"{load + power_cool + 20:.0f} кВт")
-
-        # ==========================================
-        # ОТПРАВКА ДАННЫХ В 3D ДВОЙНИК (WebSockets)
-        # ==========================================
-        # Формируем словарь данных для отправки
-state_to_save = {
-            "server_load": round(load, 1),
-            "fan_speed": round(st.session_state.sim_data["fan"], 1),
-            "rack_temp": round(new_temp, 1),
-            "power": round(load + power_cool + 20, 1) # Твой расчет мощности
-        }
-
-        # Функция для отправки данных (работает в оперативной памяти)
-def send_to_ws():
-    try:
-    # Подключаемся к нашему роутеру ws_server.py
-        ws = websocket.create_connection("ws://localhost:8765")
-        ws.send(json.dumps(state_to_save))
-        ws.close()
-    except Exception:
-        # Если сервер ws_server.py выключен, мы просто игнорируем ошибку,
-        # чтобы Streamlit (Python) не завис и не выдал красный экран
-        pass
-
-        # Запускаем отправку в фоновом потоке. 
-        # Это позволяет Streamlit не ждать ответа от сокета и работать без лагов.
-threading.Thread(target=send_to_ws, daemon=True).start()
 
 with cause_area.container():
     c_icons = {

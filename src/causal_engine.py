@@ -1,33 +1,3 @@
-# import yaml
-
-# def apply_guardrails(current_temp, current_fan, current_power):
-#     # Читаем лимиты
-#     with open('config/settings.yaml', 'r') as file:
-#         config = yaml.safe_load(file)
-        
-#     MAX_POWER = config['infrastructure']['max_power_kw']
-#     TARGET_TEMP = config['infrastructure']['target_temp_c']
-#     ATE_TEMP = config['causal_weights']['ate_temp']
-#     ATE_POWER = config['causal_weights']['ate_power']
-    
-#     # 1. Считаем, сколько энергии еще доступно
-#     power_margin = MAX_POWER - current_power
-#     max_fan_increase = power_margin / ATE_POWER
-#     safe_max_fan = min(100.0, current_fan + max_fan_increase)
-    
-#     # 2. Считаем идеальную скорость для охлаждения
-#     delta_temp = current_temp - TARGET_TEMP
-#     ideal_fan = current_fan + (delta_temp / abs(ATE_TEMP))
-    
-#     # 3. GUARDRAIL: Обрезаем опасные значения
-#     final_fan_speed = max(0.0, min(ideal_fan, safe_max_fan))
-    
-#     # Прогноз
-#     expected_temp = current_temp - ((final_fan_speed - current_fan) * abs(ATE_TEMP))
-#     expected_power = current_power + ((final_fan_speed - current_fan) * ATE_POWER)
-    
-#     return final_fan_speed, expected_temp, expected_power, MAX_POWER
-
 import yaml
 import os
 
