@@ -28,24 +28,24 @@ t = np.arange(1, 9)
 
 # ── Графики ──────────────────────────────────────────────────
 fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 5))
-fig.suptitle("Экономия энергии: Causal AI vs наивная система", fontsize=14)
+fig.suptitle("Энергияны үнемдеу: Causal AI және Naive Systems", fontsize=14)
 
 # График 1: линейный — мощность во времени
-ax1.plot(t, grouped["naive_power"].values, "r-o", label="Наивная (fan=80%)")
+ax1.plot(t, grouped["naive_power"].values, "r-o", label="Naive (fan=80%)")
 ax1.plot(t, grouped["power"].values,       "g-o", label="Causal AI")
 ax1.fill_between(t,
                  grouped["naive_power"].values,
                  grouped["power"].values,
-                 alpha=0.15, color="green", label="Зона экономии")
-ax1.set_title("Энергопотребление во времени")
-ax1.set_xlabel("Временной период")
-ax1.set_ylabel("Мощность (кВт)")
+                 alpha=0.15, color="green", label="Үнемдеу аймағы")
+ax1.set_title("Уақыт бойынша энергия тұтыну")
+ax1.set_xlabel("Уақыт кезеңі")
+ax1.set_ylabel("Қуат (кВт)")
 ax1.legend()
 ax1.grid(True, linestyle="--", alpha=0.5)
 
 # График 2: столбчатый — сравнение средней мощности
 bars = ax2.bar(
-    ["Наивная\n(fan=80%)", "Causal AI"],
+    ["Naive\n(fan=80%)", "Causal AI"],
     [avg_naive, avg_your],
     color=["red", "green"],
     width=0.4
@@ -56,16 +56,16 @@ for bar, val in zip(bars, [avg_naive, avg_your]):
              f"{val:.1f} кВт",
              ha="center", fontsize=12, fontweight="bold")
 
-ax2.set_title("Средняя мощность")
+ax2.set_title("Орташа қуат")
 ax2.set_ylabel("кВт")
 ax2.set_ylim(avg_your - 15, avg_naive + 10)
 ax2.grid(axis="y", linestyle="--", alpha=0.5)
-ax2.text(0.5, 0.5,
-         f"Экономия\n{saved_pct:.1f}%",
-         ha="center", fontsize=13, fontweight="bold", color="green",
-         transform=ax2.transAxes)
+# ax2.text(0.5, 0.5,
+#          f"Э\n{saved_pct:.1f}%",
+#          ha="center", fontsize=13, fontweight="bold", color="green",
+#          transform=ax2.transAxes)
 
 plt.tight_layout()
-plt.savefig("energy_savings.png", dpi=150, bbox_inches="tight")
+plt.savefig("energy_savings_2.png", dpi=150, bbox_inches="tight")
 print("\nГрафик сохранён: energy_savings.png")
 plt.show()
